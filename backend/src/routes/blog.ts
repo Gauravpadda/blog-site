@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { verify } from "hono/jwt";
+import { createBlogSchema, updateBlogSchema } from "@gauravpadda/common";
 
 
 export const blogRouter=new Hono<{
@@ -51,35 +52,44 @@ blogRouter.post("/add" ,async(c)=>{
       }).$extends(withAccelerate());
 
       const body=await c.req.json();
+      const {success}=createBlogSchema.safeParse(body);
+      if(success){
+        const userid=c.get("userid");
+        console.log(userid)
+      //   const user=await prisma.user.findUnique({
+      //     where:{
+      //         id:userid
+      //     }
+      //   })
+        try{
+          await prisma.post.create({
+              data:{
+                  title:body.title,
+                  content:body.content,
+                  published:body.published,
+                  authorid:userid
+      
+              }
+          })
+          c.status(200)
+          return c.json({
+              msg:"the blog has been uploaded"
+          })
+  
+        }catch(e){
+          c.status(411);
+          return c.json({
+              msg:"internal server error"
+          })
+        }
 
-      const userid=c.get("userid");
-      console.log(userid)
-    //   const user=await prisma.user.findUnique({
-    //     where:{
-    //         id:userid
-    //     }
-    //   })
-      try{
-        await prisma.post.create({
-            data:{
-                title:body.title,
-                content:body.content,
-                published:body.published,
-                authorid:userid
-    
-            }
-        })
-        c.status(200)
-        return c.json({
-            msg:"the blog has been uploaded"
-        })
-
-      }catch(e){
+      }else{
         c.status(411);
         return c.json({
-            msg:"internal server error"
+            msg:"invalid inputs provided"
         })
       }
+     
     
 })
 
@@ -91,8 +101,15 @@ blogRouter.put("/update", async (c)=>{
       }).$extends(withAccelerate());
 
     const body=await c.req.json();
-
-    const userid=c.get("userid");
+    const {success}=updateBlogSchema.safeParse(body);
+    if(!success){
+        c.status(411);
+        return c.json({
+            msg:"invalid inputs provided"
+        })
+    }
+    else{
+        const userid=c.get("userid");
     try{
         
         await prisma.post.update(
@@ -117,11 +134,14 @@ blogRouter.put("/update", async (c)=>{
             msg:'internal server error'
         })
     }
+
+    }
+    
 })
 
 
 //add pagination that refresh to get new blogs 
-
+//places above /:id because otherwise it will consider the bulk to be an param thus this route will not work
 blogRouter.get("/bulk",async(c)=>{
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
