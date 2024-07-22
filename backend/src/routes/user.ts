@@ -24,7 +24,7 @@ userRouter.post('/signup', async (c) => {
     const body=await c.req.json();
     const {success}=signupSchema.safeParse(body);
     if(!success){
-      c.status(411);
+      c.status(403);
       return c.json({
         msg:"invalid inputs"
       })
@@ -92,7 +92,7 @@ userRouter.post('/signin', async (c) => {
     }
   }
   else{
-    c.status(411);
+    c.status(403);
     return c.json({
       msg:"invalid inputs provided"
     })

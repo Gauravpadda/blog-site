@@ -84,7 +84,7 @@ blogRouter.post("/add" ,async(c)=>{
         }
 
       }else{
-        c.status(411);
+        c.status(403);
         return c.json({
             msg:"invalid inputs provided"
         })
@@ -103,7 +103,7 @@ blogRouter.put("/update", async (c)=>{
     const body=await c.req.json();
     const {success}=updateBlogSchema.safeParse(body);
     if(!success){
-        c.status(411);
+        c.status(403);
         return c.json({
             msg:"invalid inputs provided"
         })
