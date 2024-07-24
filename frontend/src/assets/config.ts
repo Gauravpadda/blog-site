@@ -1,0 +1,1 @@
+export const DatabaseUrl="https://backend.gauravpadda98.workers.dev"
